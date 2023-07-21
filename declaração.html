@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Declaração</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 20px;
+            color: white;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="message">
+        <h2>Amor Clique em mim para abrir a carta</h2>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const HEART_WIDTH = 50;
+        const HEART_HEIGHT = 50;
+        const HEART_SPEED = 2;
+        const CARD_WIDTH = 200;
+        const CARD_HEIGHT = 300;
+
+        const heartImage = new Image();
+        heartImage.src = "https://th.bing.com/th?id=OIP.sZMpq8omGyRCDdMaf4V8KQHaGJ&w=274&h=227&c=8&rs=1&qlt=90&o=6&pid=3.1&rm=2";
+
+        let hearts = [];
+        let isCardOpened = false;
+
+        // Função para criar corações
+        function createHearts(numHearts) {
+            for (let i = 0; i < numHearts; i++) {
+                const x = Math.random() * (canvas.width - HEART_WIDTH);
+                const y = Math.random() * (canvas.height - HEART_HEIGHT);
+                const dx = Math.random() * 2 - 1;
+                const dy = Math.random() * 2 - 1;
+                hearts.push({ x, y, dx, dy });
+            }
+        }
+
+        // Função para desenhar corações
+        function drawHearts() {
+            hearts.forEach((heart) => {
+                heart.x += heart.dx * HEART_SPEED;
+                heart.y += heart.dy * HEART_SPEED;
+
+                // Wrap-around logic to keep hearts inside the canvas
+                if (heart.x < -HEART_WIDTH) heart.x = canvas.width;
+                if (heart.x > canvas.width) heart.x = -HEART_WIDTH;
+                if (heart.y < -HEART_HEIGHT) heart.y = canvas.height;
+                if (heart.y > canvas.height) heart.y = -HEART_HEIGHT;
+
+                ctx.drawImage(heartImage, heart.x, heart.y, HEART_WIDTH, HEART_HEIGHT);
+            });
+        }
+
+        // Função para exibir mensagem na carta
+        function showMessage(message) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawHearts();
+
+            ctx.fillStyle = "white";
+            ctx.fillRect(canvas.width / 2 - CARD_WIDTH / 2, canvas.height / 2 - CARD_HEIGHT / 2, CARD_WIDTH, CARD_HEIGHT);
+
+            ctx.strokeStyle = "red";
+            ctx.strokeRect(canvas.width / 2 - CARD_WIDTH / 2, canvas.height / 2 - CARD_HEIGHT / 2, CARD_WIDTH, CARD_HEIGHT);
+
+            ctx.fillStyle = "red";
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+
+            // Quebra a mensagem em linhas caso seja muito longa
+            const words = message.split(' ');
+            let line = '';
+            let y = canvas.height / 2 - CARD_HEIGHT / 2 + 40; // Posição Y inicial para a primeira linha
+
+            for (let i = 0; i < words.length; i++) {
+                const testLine = line + words[i] + ' ';
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+
+                if (testWidth > CARD_WIDTH - 20 && i > 0) { // 20 é a margem esquerda e direita
+                    ctx.fillText(line, canvas.width / 2, y);
+                    line = words[i] + ' ';
+                    y += 20; // Espaço entre as linhas
+                } else {
+                    line = testLine;
+                }
+            }
+
+            ctx.fillText(line, canvas.width / 2, y); // Última linha
+        }
+
+        // Evento de clique no canvas
+        canvas.addEventListener("click", function (event) {
+            if (!isCardOpened) {
+                isCardOpened = true;
+                document.getElementById("message").style.display = "none";
+                showMessage("Se as estrelas fosse tão lindas quanto voce, eu passaroa noites em claro olhando para o ceu. te amo!"); // Coloque a mensagem que desejar aqui
+            }
+        });
+
+        // Função principal de animação
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawHearts();
+            if (!isCardOpened) {
+                showMessage("Amor Clique em Mim para abrir a carta");
+            } else {
+                showMessage("Se as estrelas fosse tão lindas quanto voce, eu passaroa noites em claro olhando para o ceu. te amo!."); // Atualiza a mensagem dentro da carta
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // Iniciar a cena
+        heartImage.onload = function () {
+            createHearts(15);
+            animate();
+        };
+    </script>
+</body>
+</html>
